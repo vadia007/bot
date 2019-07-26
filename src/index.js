@@ -5,12 +5,13 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
 const request = require('request');
-
+const dialogflow = require('dialogflow');
+const uuid = require('uuid');
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-app.listen(5000, () => console.log('Express server is listening on port 5000 new'));
+app.listen(5000, () => console.log('Express server is listening on port 5000'));
 
 app.get('/', (req, res) => res.send('Hello World!'));
 
@@ -43,6 +44,7 @@ app.post('/webhook', (req, res) => {
 
             // Get the webhook event. entry.messaging is an array, but
             // will only ever contain one event, so we get index 0
+            // console.log(entry.messaging);
             let webhook_event = entry.messaging[0];
             let sender_psid = webhook_event.sender.id;
             console.log(webhook_event);
@@ -64,23 +66,67 @@ app.post('/webhook', (req, res) => {
         // Return a '404 Not Found' if event is not from a page subscription
         res.sendStatus(404);
     }
-
 });
 
+
+
 function handleMessage(sender_psid, received_message) {
+    console.log('handle');
     let response;
 
     // Check if the message contains text
     if (received_message) {
 
-        // Create the payload for a basic text message
-        response = {
-            "text": `You sent the message: "${received_message}". Now send me an image!`
-        }
-    }
+        getIntent(received_message)
+            .then(response => {
+                console.log(response);
+            })
+            .catch(err => {
+                console.error('ERROR:', err);
+            });
 
-    // Sends the response message
-    callSendAPI(sender_psid, response);
+    } else {
+        response = {
+            "text": 'Your message should contain text'
+        };
+
+        // Sends the response message
+        callSendAPI(sender_psid, response);
+    }
+}
+
+async function getIntent(message) {
+    console.log('intent')
+    const config = {
+        credentials: {
+            private_key: process.env.DIALOGFLOW_PRIVATE_KEY,
+            client_email: process.env.DIALOGFLOW_CLIENT_EMAIL
+        }
+    };
+    const projectId = process.env.PROJECT_ID;
+    const sessionId = uuid.v4();
+    const sessionClient = new dialogflow.SessionsClient(config);
+    const sessionPath = sessionClient.sessionPath(projectId, sessionId);
+    const request = {
+        session: sessionPath,
+        queryInput: {
+            text: {
+                text: message,
+                languageCode: 'en-US',
+            },
+        },
+    };
+
+    sessionClient
+        .detectIntent(request)
+        .then(responses => {
+            // const result = responses[0].queryResult;
+            console.log(responses);
+            return responses;
+        })
+        .catch(err => {
+            console.error('ERROR:', err);
+        });
 }
 
 function callSendAPI(sender_psid, response) {
