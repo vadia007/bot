@@ -71,7 +71,6 @@ app.post('/webhook', (req, res) => {
 
 
 function handleMessage(sender_psid, received_message) {
-    console.log('handle');
     let response;
 
     // Check if the message contains text
@@ -79,7 +78,9 @@ function handleMessage(sender_psid, received_message) {
 
         getIntent(received_message)
             .then(response => {
+                console.log('--------response1--------');
                 console.log(response);
+                console.log('--------response1--------');
             })
             .catch(err => {
                 console.error('ERROR:', err);
@@ -99,7 +100,7 @@ async function getIntent(message) {
     console.log('intent')
     const config = {
         credentials: {
-            private_key: process.env.DIALOGFLOW_PRIVATE_KEY,
+            private_key: JSON.parse(`"${process.env.DIALOGFLOW_PRIVATE_KEY}"`),
             client_email: process.env.DIALOGFLOW_CLIENT_EMAIL
         }
     };
@@ -117,16 +118,19 @@ async function getIntent(message) {
         },
     };
 
-    sessionClient
-        .detectIntent(request)
-        .then(responses => {
-            // const result = responses[0].queryResult;
-            console.log(responses);
-            return responses;
-        })
-        .catch(err => {
-            console.error('ERROR:', err);
-        });
+    return sessionClient
+        .detectIntent(request);
+        // .then(responses => {
+        //     // const result = responses[0].queryResult;
+        //     console.log('---------before resp------');
+        //     console.log(responses);
+        //     console.log('---------after resp------');
+        //     return responses;
+        // })
+        // .catch(err => {
+        //     console.error('ERROR:', err);
+        //     return false;
+        // });
 }
 
 function callSendAPI(sender_psid, response) {
@@ -153,3 +157,8 @@ function callSendAPI(sender_psid, response) {
         }
     });
 }
+
+process.on('unhandledRejection', (reason, p) => {
+    console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
+    // application specific logging, throwing an error, or other logic here
+});
