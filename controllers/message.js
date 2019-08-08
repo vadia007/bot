@@ -13,15 +13,15 @@ module.exports = (req, res) => {
             // will only ever contain one event, so we get index 0
             // console.log(entry.messaging);
             let webhook_event = entry.messaging[0];
-            let sender_psid = webhook_event.sender.id;
-            console.log(webhook_event);
+            // let sender_psid = webhook_event.sender.id;
 
             if (webhook_event.message) {
                 console.log(webhook_event.message);
 
                 functions.handleMessage(webhook_event.sender.id, webhook_event.message.text);
             } else if (webhook_event.postback) {
-                console.log(webhook_event.postback)
+                console.log(webhook_event.postback);
+                functions.handlePostback(webhook_event.sender.id, webhook_event.postback.payload);
             }
 
         });
