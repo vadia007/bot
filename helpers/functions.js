@@ -4,11 +4,36 @@ const nlu = require('./nlu');
 const fb = require('./fb');
 const timeZone = 'Europe/Kiev';
 
-function handleMessage(senderPsid, receivedMessage) {
+function handleMessage(senderPsid, receivedMessage, quickReply) {
     let response;
 
-    // Check if the message contains text
-    if (receivedMessage) {
+    // Check if it's quick reply
+    if (quickReply) {
+        switch (true) {
+            case (quickReply.indexOf('confirmDeleteReminder_') !== -1):
+                const reminderId = quickReply.split('_')[1];
+
+                fb.confirmDeleteReminder(reminderId)
+                    .then((result) => {
+                        let responseText;
+
+                        if (result.isDeleted) {
+                            responseText = `${result.reminderRecord.name} was successfully deleted.`
+                        } else {
+                            responseText = `Sorry, can't delete ${result.reminderRecord.name} reminder.`
+                        }
+
+                        fb.send(senderPsid, responseText);
+                    })
+                    .catch((error) => {
+                        console.error(error);
+                    });
+
+                break;
+        }
+
+        // Check if the message contains text
+    } else if (receivedMessage) {
         nlu.getIntent(receivedMessage, senderPsid)
             .then(response => {
                 const data = response[0].queryResult;
@@ -28,6 +53,9 @@ function handleMessage(senderPsid, receivedMessage) {
                             case 'input.list':
                                 reminderList(senderPsid);
                                 break;
+                            case 'input.delete':
+                                reminderList(senderPsid, true);
+                                break;
                         }
                     }
                 }
@@ -43,17 +71,31 @@ function handleMessage(senderPsid, receivedMessage) {
 }
 
 function handlePostback(senderPsid, type) {
-    switch (true) {
-        case (type == 'addReminder'):
-            const defaultText = 'Add reminder';
+    let defaultText,
+        reminderId;
 
+    switch (true) {
+        case (type === 'addReminder'):
+            defaultText = 'Add reminder';
             handleMessage(senderPsid, defaultText);
             break;
-        case (type == 'reminderList'):
+        case (type === 'reminderList'):
+            defaultText = 'list';
+            handleMessage(senderPsid, defaultText);
             break;
-        case (type == 'deleteReminder'):
+        case (type === 'deleteReminder'):
+        case (type === 'cancelDelete'):
+            defaultText = 'delete';
+            handleMessage(senderPsid, defaultText);
             break;
-            //delete with id
+        case (type.indexOf('deleteReminder_') !== -1):
+            reminderId = type.split('_')[1];
+
+            fb.sendDeleteConfirmationBtn(senderPsid, reminderId)
+                .catch((error) => {
+                    console.error(error);
+                });
+            break;
         default:
             console.log('default');
     }
@@ -103,15 +145,15 @@ function addReminder(senderPsid, data) {
         });
 }
 
-function reminderList(senderPsid) {
-    reminder.getReminderList(senderPsid)
+function reminderList(senderPsid, withDeleteBtn) {
+    reminder.getReminderList(senderPsid, withDeleteBtn)
         .then((reminders) => {
             if (!reminders.length) {
                 const responseText = 'There are no reminders';
 
                 fb.send(senderPsid, responseText);
             } else {
-                fb.sendList(senderPsid, reminders);
+                fb.sendList(senderPsid, reminders, withDeleteBtn);
             }
         });
 }

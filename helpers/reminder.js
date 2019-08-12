@@ -43,7 +43,43 @@ function getReminderList(senderPsid) {
     })
 }
 
+function getReminder(id) {
+    return new Promise(function (resolve, reject) {
+        connection.query(
+            `SELECT * FROM ${tableName}
+            WHERE id = ?
+            LIMIT 1`, [id], function (error, results, fields) {
+                if (error) {
+                    reject(error);
+                } else {
+                    const  reminder = results.length ? results[0] : null;
+
+                    resolve(reminder);
+                }
+            }
+        )
+    })
+}
+
+function deleteReminder(id) {
+    return new Promise(function (resolve, reject) {
+        connection.query(
+            `UPDATE ${tableName}
+            SET isDeleted = 1
+            WHERE id = ?`, [id], function (error, results, fields) {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(results.changedRows);
+                }
+            }
+        )
+    })
+}
+
 module.exports = {
     addReminder: addReminder,
-    getReminderList: getReminderList
+    getReminderList: getReminderList,
+    getReminder: getReminder,
+    deleteReminder: deleteReminder
 };
