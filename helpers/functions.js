@@ -13,7 +13,7 @@ function handleMessage(senderPsid, receivedMessage, quickReply) {
             case (quickReply.indexOf('confirmDeleteReminder_') !== -1):
                 const reminderId = quickReply.split('_')[1];
 
-                fb.confirmDeleteReminder(reminderId)
+                fb.deleteReminder(reminderId)
                     .then((result) => {
                         let responseText;
 
@@ -28,7 +28,6 @@ function handleMessage(senderPsid, receivedMessage, quickReply) {
                     .catch((error) => {
                         console.error(error);
                     });
-
                 break;
         }
 
@@ -92,6 +91,22 @@ function handlePostback(senderPsid, type) {
             reminderId = type.split('_')[1];
 
             fb.sendDeleteConfirmationBtn(senderPsid, reminderId)
+                .catch((error) => {
+                    console.error(error);
+                });
+            break;
+        case (type.indexOf('accept_') !== -1):
+            reminderId = type.split('_')[1];
+
+            fb.deleteReminder(reminderId)
+                .catch((error) => {
+                    console.error(error);
+                });
+            break;
+        case (type.indexOf('snooze_') !== -1):
+            reminderId = type.split('_')[1];
+
+            fb.snoozeReminder(reminderId)
                 .catch((error) => {
                     console.error(error);
                 });
@@ -162,4 +177,3 @@ module.exports = {
     handleMessage: handleMessage,
     handlePostback: handlePostback
 };
-

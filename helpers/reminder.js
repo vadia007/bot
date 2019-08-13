@@ -77,9 +77,46 @@ function deleteReminder(id) {
     })
 }
 
+function getCurrentReminders() {
+    return new Promise((resolve, reject) => {
+        const startOfMinuteTimestamp = moment().startOf('minute').unix();
+        const endOfMinuteTimestamp = startOfMinuteTimestamp + 59;
+
+        connection.query(
+            `SELECT * FROM ${tableName} 
+            WHERE isDeleted = 0
+            AND launchTime BETWEEN ${startOfMinuteTimestamp} AND ${endOfMinuteTimestamp}`,
+            [], function (error, results, fields) {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(results);
+                }
+            })
+    });
+}
+
+function updateLaunchTime(id, launchTime) {
+    return new Promise((resolve, reject) => {
+        connection.query(
+            `UPDATE ${tableName}
+            SET launchTime = ?
+            WHERE id = ?
+            AND isDeleted = ?`, [launchTime, id, 0], function (error, results, fields) {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(results.changedRows);
+                }
+            })
+    });
+}
+
 module.exports = {
     addReminder: addReminder,
     getReminderList: getReminderList,
     getReminder: getReminder,
-    deleteReminder: deleteReminder
+    deleteReminder: deleteReminder,
+    getCurrentReminders: getCurrentReminders,
+    updateLaunchTime: updateLaunchTime
 };

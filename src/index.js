@@ -7,6 +7,7 @@ const bodyParser = require('body-parser');
 const app = express();
 const verificationController = require('../controllers/verification');
 const messageController = require('../controllers/message');
+require('../cron-jobs/index')();
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));

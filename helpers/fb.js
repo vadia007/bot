@@ -144,10 +144,74 @@ async function getDeleteConfirmationBtnResponse(reminderId) {
     }
 }
 
-async function confirmDeleteReminder(reminderId) {
+async function deleteReminder(reminderId) {
     return {
         reminderRecord: await reminder.getReminder(reminderId),
         isDeleted: await reminder.deleteReminder(reminderId)
+    }
+}
+
+async function sendReminders() {
+    const reminders = await reminder.getCurrentReminders();
+
+    if (reminders.length) {
+        reminders.forEach(function (reminderRecord) {
+            sendReminderNotification(reminderRecord);
+        })
+    }
+}
+
+function sendReminderNotification(reminderRecord) {
+    const response = getReminderNotificationResponse(reminderRecord);
+
+    callSendAPI(reminderRecord.userPsid, response);
+}
+
+function getReminderNotificationResponse(reminderRecord) {
+    return {
+        "message": {
+            "attachment": {
+                "type": "template",
+                "payload": {
+                    "template_type": "generic",
+                    "elements": [{
+                        "title": `${reminderRecord.name} reminder`,
+                        "buttons": [
+                            {
+                                "type": "postback",
+                                "title": "Accept",
+                                "payload": `accept_${reminderRecord.id}`
+                            },
+                            {
+                                "type": "postback",
+                                "title": "Snooze",
+                                "payload": `snooze_${reminderRecord.id}`
+                            }
+                        ]
+                    }]
+                }
+            }
+        }
+    }
+}
+
+async function snoozeReminder(id) {
+    try {
+        let responseText;
+        const snoozeMinutesCount = 2;
+        const newLaunchTime = moment().add(snoozeMinutesCount, 'minutes').unix();
+        const result = await reminder.updateLaunchTime(id, newLaunchTime);
+        const reminderRecord = await reminder.getReminder(id);
+
+        if (result) {
+            responseText = `${reminderRecord.name} was snoozed for ${snoozeMinutesCount} minutes`;
+        } else {
+            responseText = `You can't snooze ${reminderRecord.name} reminder. It is already deleted.`;
+        }
+
+        send(reminderRecord.userPsid, responseText);
+    } catch (e) {
+        console.error(e.message);
     }
 }
 
@@ -155,5 +219,7 @@ module.exports = {
     send: send,
     sendList: sendList,
     sendDeleteConfirmationBtn: sendDeleteConfirmationBtn,
-    confirmDeleteReminder: confirmDeleteReminder
+    deleteReminder: deleteReminder,
+    sendReminders: sendReminders,
+    snoozeReminder: snoozeReminder
 };
