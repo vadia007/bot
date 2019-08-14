@@ -5,8 +5,6 @@ const fb = require('./fb');
 const timeZone = 'Europe/Kiev';
 
 function handleMessage(senderPsid, receivedMessage, quickReply) {
-    let response;
-
     // Check if it's quick reply
     if (quickReply) {
         switch (true) {
@@ -44,6 +42,7 @@ function handleMessage(senderPsid, receivedMessage, quickReply) {
                         switch (data.action) {
                             case 'input.welcome':
                             case 'input.unknown':
+                            case 'input.start':
                                 fb.send(senderPsid, data.fulfillmentText, true);
                                 break;
                             case 'input.addRemainder':

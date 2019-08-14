@@ -16,8 +16,3 @@ app.listen(5000, () => console.log('Express server is listening on port 5000'));
 
 app.get('/webhook', verificationController);
 app.post('/webhook', messageController);
-
-process.on('unhandledRejection', (reason, p) => {
-    console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
-    // application specific logging, throwing an error, or other logic here
-});
