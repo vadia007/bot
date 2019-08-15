@@ -4,8 +4,8 @@ function getIntent(message, senderPsid) {
     const config = {
         credentials: {
             private_key: JSON.parse(`"${process.env.DIALOGFLOW_PRIVATE_KEY}"`),
-            client_email: process.env.DIALOGFLOW_CLIENT_EMAIL
-        }
+            client_email: process.env.DIALOGFLOW_CLIENT_EMAIL,
+        },
     };
     const projectId = process.env.PROJECT_ID;
     const sessionId = senderPsid;
@@ -21,10 +21,9 @@ function getIntent(message, senderPsid) {
         },
     };
 
-    return sessionClient
-        .detectIntent(request);
+    return sessionClient.detectIntent(request);
 }
 
 module.exports = {
-    getIntent: getIntent
+    getIntent,
 };

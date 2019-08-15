@@ -1,16 +1,17 @@
-const connection = require('./connection');
-const tableName = 'reminders';
 const moment = require('moment');
+const connection = require('./connection');
+
+const tableName = 'reminders';
 
 function addReminder(name, userPsid, launchTime) {
     return new Promise((resolve, reject) => {
         const reminder = {
-            userPsid: userPsid,
-            name: name,
-            launchTime
+            userPsid,
+            name,
+            launchTime,
         };
 
-        connection.query(`INSERT INTO ${tableName} SET ?`, reminder, function (error, results, fields) {
+        connection.query(`INSERT INTO ${tableName} SET ?`, reminder, error => {
             if (error) {
                 reject(error);
             }
@@ -21,78 +22,85 @@ function addReminder(name, userPsid, launchTime) {
 }
 
 function getReminderList(senderPsid) {
-    return new Promise(function (resolve, reject) {
-        const values = [
-            senderPsid,
-            moment().unix(),
-            0
-        ];
+    return new Promise((resolve, reject) => {
+        const values = [senderPsid, moment().unix(), 0];
 
         connection.query(
             `SELECT * FROM ${tableName}
              WHERE userPsid = ? 
              AND launchTime > ? 
              AND isDeleted = ?
-             ORDER BY launchTIme ASC`, values, function (error, results, fields) {
+             ORDER BY launchTIme ASC`,
+            values,
+            (error, results) => {
                 if (error) {
                     reject(error);
                 } else {
                     resolve(results);
                 }
-            });
-    })
+            },
+        );
+    });
 }
 
 function getReminder(id) {
-    return new Promise(function (resolve, reject) {
+    return new Promise((resolve, reject) => {
         connection.query(
             `SELECT * FROM ${tableName}
             WHERE id = ?
-            LIMIT 1`, [id], function (error, results, fields) {
+            LIMIT 1`,
+            [id],
+            (error, results) => {
                 if (error) {
                     reject(error);
                 } else {
-                    const  reminder = results.length ? results[0] : null;
+                    const reminder = results.length ? results[0] : null;
 
                     resolve(reminder);
                 }
-            }
-        )
-    })
+            },
+        );
+    });
 }
 
 function deleteReminder(id) {
-    return new Promise(function (resolve, reject) {
+    return new Promise((resolve, reject) => {
         connection.query(
             `UPDATE ${tableName}
             SET isDeleted = 1
-            WHERE id = ?`, [id], function (error, results, fields) {
+            WHERE id = ?`,
+            [id],
+            function(error, results) {
                 if (error) {
                     reject(error);
                 } else {
                     resolve(results.changedRows);
                 }
-            }
-        )
-    })
+            },
+        );
+    });
 }
 
 function getCurrentReminders() {
     return new Promise((resolve, reject) => {
-        const startOfMinuteTimestamp = moment().startOf('minute').unix();
+        const startOfMinuteTimestamp = moment()
+            .startOf('minute')
+            .unix();
         const endOfMinuteTimestamp = startOfMinuteTimestamp + 59;
 
         connection.query(
             `SELECT * FROM ${tableName} 
             WHERE isDeleted = 0
             AND launchTime BETWEEN ${startOfMinuteTimestamp} AND ${endOfMinuteTimestamp}`,
-            [], function (error, results, fields) {
+            [],
+            (error, results) => {
                 if (error) {
                     reject(error);
                 } else {
                     resolve(results);
                 }
-            })
+            },
+        );
     });
 }
 
@@ -102,21 +110,24 @@ function updateLaunchTime(id, launchTime) {
             `UPDATE ${tableName}
             SET launchTime = ?
             WHERE id = ?
-            AND isDeleted = ?`, [launchTime, id, 0], function (error, results, fields) {
+            AND isDeleted = ?`,
+            [launchTime, id, 0],
+            (error, results) => {
                 if (error) {
                     reject(error);
                 } else {
                     resolve(results.changedRows);
                 }
-            })
+            },
+        );
     });
 }
 
 module.exports = {
-    addReminder: addReminder,
-    getReminderList: getReminderList,
-    getReminder: getReminder,
-    deleteReminder: deleteReminder,
-    getCurrentReminders: getCurrentReminders,
-    updateLaunchTime: updateLaunchTime
+    addReminder,
+    getReminderList,
+    getReminder,
+    deleteReminder,
+    getCurrentReminders,
+    updateLaunchTime,
 };
