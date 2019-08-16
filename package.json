@@ -31,11 +31,11 @@
   },
   "prettier": {
     "bracketSpacing": true,
-    "parser": "babylon",
+    "parser": "babel",
     "printWidth": 100,
     "semi": true,
     "singleQuote": true,
-    "tabWidth": 4,
+    "tabWidth": 2,
     "trailingComma": "all",
     "useTabs": false
   },
@@ -58,7 +58,8 @@
         {
           "props": false
         }
-      ]
+      ],
+      "no-console": "off"
     }
   },
   "devDependencies": {
@@ -67,6 +68,21 @@
     "eslint-config-prettier": "^6.0.0",
     "eslint-plugin-import": "^2.18.2",
     "eslint-plugin-prettier": "^3.1.0",
+    "husky": "^3.0.3",
+    "lint-staged": "^9.2.1",
     "prettier": "^1.18.2"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run lint-staged",
+      "pre-push": "npm run lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.js": [
+      "prettier --write",
+      "eslint --fix --max-warnings 0",
+      "git add"
+    ]
   }
 }
