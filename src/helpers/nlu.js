@@ -1,16 +1,17 @@
 const dialogflow = require('dialogflow');
 
+const { dialogFlow: dialogFlowConfig } = require('../../config');
+
 function getIntent(message, senderPsid) {
   const config = {
     credentials: {
-      private_key: JSON.parse(`"${process.env.DIALOGFLOW_PRIVATE_KEY}"`),
-      client_email: process.env.DIALOGFLOW_CLIENT_EMAIL,
+      private_key: dialogFlowConfig.privateKey,
+      client_email: dialogFlowConfig.clientEmail,
     },
   };
-  const projectId = process.env.PROJECT_ID;
   const sessionId = senderPsid;
   const sessionClient = new dialogflow.SessionsClient(config);
-  const sessionPath = sessionClient.sessionPath(projectId, sessionId);
+  const sessionPath = sessionClient.sessionPath(dialogFlowConfig.projectId, sessionId);
   const request = {
     session: sessionPath,
     queryInput: {

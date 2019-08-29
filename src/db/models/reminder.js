@@ -1,7 +1,17 @@
 const moment = require('moment');
-const connection = require('./connection');
+const connection = require('../connection');
 
 const tableName = 'reminders';
+
+function generalQueryTemplate(query, args, resolve, reject) {
+  connection.query(query, args, (error, results) => {
+    if (error) {
+      reject(error);
+    } else {
+      resolve(results);
+    }
+  });
+}
 
 function addReminder(name, userPsid, launchTime) {
   return new Promise((resolve, reject) => {
@@ -11,13 +21,7 @@ function addReminder(name, userPsid, launchTime) {
       launchTime,
     };
 
-    connection.query(`INSERT INTO ${tableName} SET ?`, reminder, error => {
-      if (error) {
-        reject(error);
-      }
-
-      resolve();
-    });
+    generalQueryTemplate(`INSERT INTO ${tableName} SET ?`, reminder, resolve, reject);
   });
 }
 
@@ -25,20 +29,15 @@ function getReminderList(senderPsid) {
   return new Promise((resolve, reject) => {
     const values = [senderPsid, moment().unix(), 0];
 
-    connection.query(
+    generalQueryTemplate(
       `SELECT * FROM ${tableName}
              WHERE userPsid = ? 
              AND launchTime > ? 
              AND isDeleted = ?
              ORDER BY launchTIme ASC`,
       values,
-      (error, results) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(results);
-        }
-      },
+      resolve,
+      reject,
     );
   });
 }
@@ -65,18 +64,13 @@ function getReminder(id) {
 
 function deleteReminder(id) {
   return new Promise((resolve, reject) => {
-    connection.query(
+    generalQueryTemplate(
       `UPDATE ${tableName}
             SET isDeleted = 1
             WHERE id = ?`,
       [id],
-      (error, results) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(results.changedRows);
-        }
-      },
+      resolve,
+      reject,
     );
   });
 }
@@ -88,37 +82,27 @@ function getCurrentReminders() {
       .unix();
     const endOfMinuteTimestamp = startOfMinuteTimestamp + 59;
 
-    connection.query(
+    generalQueryTemplate(
       `SELECT * FROM ${tableName} 
             WHERE isDeleted = 0
             AND launchTime BETWEEN ${startOfMinuteTimestamp} AND ${endOfMinuteTimestamp}`,
       [],
-      (error, results) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(results);
-        }
-      },
+      resolve,
+      reject,
     );
   });
 }
 
 function updateLaunchTime(id, launchTime) {
   return new Promise((resolve, reject) => {
-    connection.query(
+    generalQueryTemplate(
       `UPDATE ${tableName}
             SET launchTime = ?
             WHERE id = ?
             AND isDeleted = ?`,
       [launchTime, id, 0],
-      (error, results) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(results.changedRows);
-        }
-      },
+      resolve,
+      reject,
     );
   });
 }

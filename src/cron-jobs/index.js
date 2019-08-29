@@ -1,11 +1,11 @@
 const cron = require('node-cron');
-const fb = require('../helpers/fb');
+const reminder = require('../helpers/reminder');
 
 module.exports = () => {
   cron.schedule('* * * * *', () => {
     console.log('cron is running');
 
-    fb.sendReminders().catch(error => {
+    reminder.sendReminders().catch(error => {
       console.error(error);
     });
   });
